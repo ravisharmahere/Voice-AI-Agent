@@ -73,4 +73,4 @@ export default defineAgent({
   },
 });
 
-cli.runApp(new WorkerOptions({ agent: fileURLToPath(import.meta.url) }));
+cli.runApp(new WorkerOptions({ agent: fileURLToPath(import.meta.url), agentName: 'my-telephony-agent', }));

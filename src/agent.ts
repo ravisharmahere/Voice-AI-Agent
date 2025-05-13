@@ -100,7 +100,7 @@ export async function startAgent() {
       agent: fileURLToPath(import.meta.url),
       agentName: process.env.AGENT_NAME,
       logLevel: 'debug',
-      port: Number(process.env.PORT as string),
+      // port: Number(process.env.PORT as string),
     }),
   );
   console.log('Agent is running...');

@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: 2024 LiveKit, Inc.
-//
-// SPDX-License-Identifier: Apache-2.0
 import {
   type JobContext,
   type JobProcess,
@@ -38,9 +35,24 @@ export default defineAgent({
     });
 
     await ctx.connect();
-    console.log('waiting for participant');
+    console.log('✅ Agent connected to room ', ctx.room.name);
+
+    // Listen for participant connections
+    ctx.room.on('participantConnected', (participant) => {
+      console.log(`👤 Participant connected: ${participant.identity}`);
+    });
+
+    // Listen for participant disconnections
+    ctx.room.on('participantDisconnected', (participant) => {
+      console.log(`❌ Participant disconnected: ${participant.identity}`);
+    });
+
+    // Wait for a participant to join
     const participant = await ctx.waitForParticipant();
-    console.log(`starting assistant example agent for ${participant.identity}`);
+    console.log(`🎉 Participant joined: ${participant.identity}`);
+
+    // Log participant metadata
+    console.log('📄 Participant:', JSON.stringify(participant));
 
     const fncCtx: llm.FunctionContext = {
       weather: {
@@ -49,7 +61,7 @@ export default defineAgent({
           location: z.string().describe('The location to get the weather for'),
         }),
         execute: async ({ location }) => {
-          console.debug(`executing weather function for ${location}`);
+          console.debug(`Executing weather function for ${location}`);
           const response = await fetch(`https://wttr.in/${location}?format=%C+%t`);
           if (!response.ok) {
             throw new Error(`Weather API returned status: ${response.status}`);
@@ -67,19 +79,29 @@ export default defineAgent({
       new elevenlabs.TTS(),
       { chatCtx: initialContext, fncCtx },
     );
+
     agent.start(ctx.room, participant);
 
-    await agent.say('Hey, how can I help you today', true);
+    await agent.say('Hey, how can I help you today?', true);
+
+    // Handle participant disconnection
+    ctx.room.once('participantDisconnected', (p) => {
+      if (p.identity === participant.identity) {
+        console.log('📞 Caller left.');
+        ctx.shutdown();
+      }
+    });
   },
 });
 
 export async function startAgent() {
-  // Your existing agent setup code
   cli.runApp(
     new WorkerOptions({
       agent: fileURLToPath(import.meta.url),
       agentName: process.env.AGENT_NAME,
+      logLevel: 'debug',
+      port: Number(process.env.PORT as string),
     }),
   );
-  console.log("Agent is running...");
+  console.log('Agent is running...');
 }

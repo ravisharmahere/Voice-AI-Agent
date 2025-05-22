@@ -6,14 +6,14 @@ import { routeManager } from './routes';
 // Load environment variables from .env file
 dotenv.config();
 
-const { PORT } = process.env;
+const { SERVER_PORT } = process.env;
 
 export function startServer() {
   const server = http.createServer((req, res) => {
     routeManager(req, res);
   });
 
-  server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  server.listen(SERVER_PORT, () => {
+    console.log(`Server is running on port ${SERVER_PORT}`);
   });
 }
